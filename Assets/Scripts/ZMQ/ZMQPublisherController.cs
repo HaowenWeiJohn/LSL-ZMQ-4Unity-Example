@@ -1,12 +1,14 @@
 using LSL;
 using NetMQ;
+using NetMQ.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ZMQPublisherController : ZMQPublisherInterface
+public class ZMQPublisherController : MonoBehaviour
 {
     // Start is called before the first frame update
+    public PublisherSocket socket;
 
     public string tcpAddress = "tcp://localhost:5555";
     public string topicName = "unity_zmq_my_topic_name";
@@ -20,7 +22,8 @@ public class ZMQPublisherController : ZMQPublisherInterface
     void Start()
     {
         AsyncIO.ForceDotNet.Force();
-        InitSocket(tcpAddress);
+        socket = new PublisherSocket(tcpAddress);
+
     }
 
     // Update is called once per frame

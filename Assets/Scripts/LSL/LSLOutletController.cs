@@ -1,10 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using LSL;
 
-public class LSLOutletController : LSLOutletInterface
+public class LSLOutletController : MonoBehaviour
 {
     // Start is called before the first frame update
+    public StreamOutlet streamOutlet;
 
     public string streamName = "unity_lsl_my_stream_name";
     public string streamType = "LSL";
@@ -20,8 +22,15 @@ public class LSLOutletController : LSLOutletInterface
     void Start()
     {
         start_time = Time.time;
-        InitLSLStreamOutlet(streamName, streamType, channelNum, nominalSamplingRate, channelFormat);
 
+        StreamInfo streamInfo = new StreamInfo(
+                                                streamName,
+                                                streamType,
+                                                channelNum,
+                                                nominalSamplingRate,
+                                                channelFormat
+                                                );
+        streamOutlet = new StreamOutlet(streamInfo);
     }
 
     // Update is called once per frame
@@ -32,8 +41,14 @@ public class LSLOutletController : LSLOutletInterface
 
         for (int i = 0; i < required_sample; i++)
         {
-            float[] sample = CreateRandomArray();
-            streamOutlet.push_sample(sample);
+            // you can also get the channel count from streamOutlet.info().channel_count()
+            float[] randomArray = new float[channelNum];
+            for (int j = 0; j < channelNum; j++)
+            {
+                randomArray[j] = Random.Range(0.0f, 1.0f);
+            }
+            streamOutlet.push_sample(randomArray);
+
         }
         sent_sample += required_sample;
     }
