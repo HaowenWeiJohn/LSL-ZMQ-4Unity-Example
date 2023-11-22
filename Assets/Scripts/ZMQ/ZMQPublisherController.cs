@@ -21,7 +21,10 @@ public class ZMQPublisherController : MonoBehaviour
 
     void Start()
     {
+        // it is very important to start the AsyncIO before creating any sockets
+        // Unity will freeze on exit if you forget this step
         AsyncIO.ForceDotNet.Force();
+
         socket = new PublisherSocket(tcpAddress);
 
     }
@@ -54,6 +57,8 @@ public class ZMQPublisherController : MonoBehaviour
 
     }
 
+
+    // clean up on quit
     public void OnApplicationQuit()
     {
         socket.Dispose();
