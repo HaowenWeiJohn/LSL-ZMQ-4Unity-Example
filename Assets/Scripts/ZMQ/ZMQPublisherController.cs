@@ -1,70 +1,91 @@
-using LSL;
+using System.Collections;
+using UnityEngine;
+using AsyncIO;
 using NetMQ;
 using NetMQ.Sockets;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using System;
 
 public class ZMQPublisherController : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public PublisherSocket socket;
+    [Header("In-game Objects")]
+    public Camera captureCamera;  // in your editor, set this to the camera you want to capture
 
-    public string tcpAddress = "tcp://localhost:5555";
-    public string topicName = "unity_zmq_my_topic_name";
-    public float nominalSamplingRate = 100.0f;
+    [Header("Camera Capture Image Size")]
+    public int imageWidth = 400;
+    public int imageHeight = 400;
 
-    public int channelNum = 8;
+    [Header("Runtime Parameters")]
+    public float srate = 15f;
 
-    float start_time;
-    public float sent_sample = 0.0f;
+    // objects to hold the image data;
+    RenderTexture tempRenderColorTexture;
+    Texture2D colorImage;
 
-    void Start()
+    [Header("Networking Fields")]
+    public string tcpAddress = "tcp://localhost:5557";
+    public string topicName = "unity_zmq_my_stream_name";
+    PublisherSocket socket;
+
+    [Header("Networking Information (View-only)")]
+    public long imageCounter = 0;
+
+
+    private void Start()
     {
-        // it is very important to start the AsyncIO before creating any sockets
-        // Unity will freeze on exit if you forget this step
-        AsyncIO.ForceDotNet.Force();
+        // check if capture camera has been set
+        if (captureCamera == null)
+        {
+            Debug.LogError("CameraCaptureServer: captureCamera is not set. Please set it in the editor.");
+            return;
+        }
 
+        tempRenderColorTexture = new RenderTexture(imageWidth, imageHeight, 24, RenderTextureFormat.ARGB32)
+        {
+            antiAliasing = 4
+        };
+
+        colorImage = new Texture2D(imageWidth, imageHeight, TextureFormat.RGB24, false, true);
+
+        ForceDotNet.Force();
         socket = new PublisherSocket(tcpAddress);
-
+        StartCoroutine(UploadCapture(1f / srate));
     }
 
-    // Update is called once per frame
-    void Update()
+    IEnumerator UploadCapture(float waitTime)
     {
-
-        float elapsed_time = Time.time - start_time;
-        int required_sample = (int)(elapsed_time * nominalSamplingRate) - (int)sent_sample;
-
-        for (int i = 0; i < required_sample; i++)
+        while (true)
         {
-            // create a random array with the same length as channelNum
-            float[] randomArray = new float[channelNum];
-            for (int j = 0; j < channelNum; j++)
-            {
-                randomArray[j] = Random.Range(0.0f, 1.0f);
-            }
-            // send the random array
+            yield return new WaitForSeconds(waitTime);
 
-            // randomArray to byte array
-            byte[] randomArrayBytes = new byte[randomArray.Length * sizeof(float)];
-            System.Buffer.BlockCopy(randomArray, 0, randomArrayBytes, 0, randomArrayBytes.Length);
-            socket.SendMoreFrame(topicName).SendFrame(randomArrayBytes);
+            float frameStartTime = Time.realtimeSinceStartup;
+            byte[] imageBytes = encodeColorCamera();
 
+            double timestamp = Time.unscaledTime;
+            socket.SendMoreFrame(topicName).SendMoreFrame(BitConverter.GetBytes(timestamp)).SendFrame(imageBytes);
+
+            imageCounter++;
+            float frameEndTime = Time.realtimeSinceStartup;
 
         }
-        sent_sample += required_sample;
-
     }
 
+    public byte[] encodeColorCamera()
+    {
+        //render color camera and save bytes
+        captureCamera.targetTexture = tempRenderColorTexture;
+        RenderTexture.active = tempRenderColorTexture;
+        captureCamera.Render();
 
-    // clean up on quit
-    public void OnApplicationQuit()
+        colorImage.ReadPixels(new Rect(0, 0, colorImage.width, colorImage.height), 0, 0);
+        colorImage.Apply();
+
+        return colorImage.GetRawTextureData();
+    }
+
+    private void OnDestroy()
     {
         socket.Dispose();
         NetMQConfig.Cleanup();
     }
-
-
 
 }

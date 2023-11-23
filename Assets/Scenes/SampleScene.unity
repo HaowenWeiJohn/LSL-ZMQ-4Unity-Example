@@ -132,7 +132,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 517108321}
-  - component: {fileID: 517108320}
+  - component: {fileID: 517108322}
   m_Layer: 0
   m_Name: ZMQPublisherController
   m_TagString: Untagged
@@ -140,23 +140,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &517108320
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 517108319}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b8f54413c21b1b4bacf6f5cba37894b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tcpAddress: tcp://localhost:5555
-  topicName: unity_zmq_my_topic_name
-  nominalSamplingRate: 100
-  channelNum: 8
-  sent_sample: 0
 --- !u!4 &517108321
 Transform:
   m_ObjectHideFlags: 0
@@ -172,6 +155,26 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &517108322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 517108319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b8f54413c21b1b4bacf6f5cba37894b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  captureCamera: {fileID: 963194227}
+  imageWidth: 400
+  imageHeight: 400
+  srate: 15
+  tcpAddress: tcp://localhost:5557
+  topicName: unity_zmq_my_stream_name
+  imageCounter: 0
+  fps: 0
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
